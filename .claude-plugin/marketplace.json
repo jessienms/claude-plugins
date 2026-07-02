@@ -15,6 +15,17 @@
       "homepage": "https://github.com/jessienms/claude-plugins",
       "license": "MIT",
       "tags": ["unity", "git", "worktree", "workflow"]
+    },
+    {
+      "name": "statusline",
+      "source": "./plugins/statusline",
+      "description": "Status line with model/git/time header plus gradient gauges for context window and 5-hour rate limit — cross-platform (jq or PowerShell fallback)",
+      "author": {
+        "name": "jessienms"
+      },
+      "homepage": "https://github.com/jessienms/claude-plugins",
+      "license": "MIT",
+      "tags": ["statusline", "gauge", "context", "rate-limit"]
     }
   ]
 }
