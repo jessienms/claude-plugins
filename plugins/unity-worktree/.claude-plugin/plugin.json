@@ -1,0 +1,12 @@
+{
+  "name": "unity-worktree",
+  "displayName": "Unity Worktree Pool",
+  "description": "Set up and manage a small pool of persistent, reusable git worktree folders for a Unity project, so Unity's Library/Temp/obj cache stays warm instead of rebuilding every time you switch branches.",
+  "version": "1.0.0",
+  "author": {
+    "name": "jessienms"
+  },
+  "repository": "https://github.com/jessienms/claude-plugins",
+  "license": "MIT",
+  "keywords": ["unity", "git", "worktree", "workflow"]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "jessienms-plugins",
+  "description": "Claude Code plugins by jessienms",
+  "owner": {
+    "name": "jessienms"
+  },
+  "plugins": [
+    {
+      "name": "unity-worktree",
+      "source": "./plugins/unity-worktree",
+      "description": "Persistent, reusable git worktree pool for Unity projects — keeps Library/Temp/obj caches warm across branch switches",
+      "author": {
+        "name": "jessienms"
+      },
+      "homepage": "https://github.com/jessienms/claude-plugins",
+      "license": "MIT",
+      "tags": ["unity", "git", "worktree", "workflow"]
+    }
+  ]
+}
