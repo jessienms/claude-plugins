@@ -1,0 +1,12 @@
+{
+  "name": "google-chat-send",
+  "displayName": "Google Chat Send",
+  "description": "Send arbitrary messages and notifications to a team Google Chat Space via incoming webhooks. Single send point with named webhooks per purpose, duplicate-send guard (tag log), and strict secret handling (webhook URLs are never printed or committed).",
+  "version": "1.0.0",
+  "author": {
+    "name": "jessienms"
+  },
+  "repository": "https://github.com/jessienms/claude-plugins",
+  "license": "MIT",
+  "keywords": ["google-chat", "webhook", "notification", "messaging", "team"]
+}

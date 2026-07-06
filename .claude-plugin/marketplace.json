@@ -26,6 +26,17 @@
       "homepage": "https://github.com/jessienms/claude-plugins",
       "license": "MIT",
       "tags": ["statusline", "gauge", "context", "rate-limit"]
+    },
+    {
+      "name": "google-chat-send",
+      "source": "./plugins/google-chat-send",
+      "description": "Send messages and notifications to a team Google Chat Space via incoming webhooks — named webhooks per purpose, duplicate-send guard, strict secret handling",
+      "author": {
+        "name": "jessienms"
+      },
+      "homepage": "https://github.com/jessienms/claude-plugins",
+      "license": "MIT",
+      "tags": ["google-chat", "webhook", "notification", "messaging"]
     }
   ]
 }
