@@ -54,18 +54,22 @@ else
 fi
 
 parsed=$(printf '%s' "$parsed" | tr -d '\r\n')
-
-# 파싱 성공 판정: 첫 필드(model)가 비어있지 않으면 정상으로 간주.
-# 성공 → 캐시 갱신 / 실패(pwsh 지연·중단, 파싱 오류) → 직전 정상값으로 폴백.
-# status line은 Claude Code가 주기적으로 재호출하므로, 다음 렌더에서 pwsh가
-# 회복되면 캐시가 자동으로 갱신된다(= 사실상의 재시도).
-if [ -n "${parsed%%$US*}" ]; then
-    printf '%s' "$parsed" > "$CACHE_FILE" 2>/dev/null
-elif [ -f "$CACHE_FILE" ]; then
-    parsed=$(cat "$CACHE_FILE" 2>/dev/null)
-fi
-
 IFS="$US" read -r model cwd used rate_used reset_epoch <<< "$parsed"
+
+# git 브랜치/워크트리는 반드시 "실제 현재 디렉터리" 기준으로만 계산한다.
+# cwd는 절대 캐시에 넣지 않는다 — 넣으면 다른 세션/워크트리에서 저장한 cwd가
+# 흘러들어와 엉뚱한 워크트리·브랜치·레포가 표시된다(전역 캐시는 모든 워크트리 공유).
+# 파싱값이 있으면 그걸, 없으면(파싱 실패) 이 프로세스의 실제 cwd를 쓴다.
+cwd="${cwd:-$PWD}"
+
+# model/context/usage 만 캐시로 폴백한다(이들은 JSON 외 다른 소스가 없음).
+# 파싱 성공(model 존재) → 캐시 갱신 / 실패 → 직전 정상값. status line은 주기적으로
+# 재호출되므로 다음 렌더에서 파싱이 회복되면 캐시가 자동 갱신된다(= 사실상의 재시도).
+if [ -n "$model" ]; then
+    printf '%s\037%s\037%s\037%s' "$model" "$used" "$rate_used" "$reset_epoch" > "$CACHE_FILE" 2>/dev/null
+elif [ -f "$CACHE_FILE" ]; then
+    IFS="$US" read -r model used rate_used reset_epoch <<< "$(cat "$CACHE_FILE" 2>/dev/null)"
+fi
 
 # 리셋 시각: epoch → HH:mm (GNU date는 -d @, BSD/macOS date는 -r)
 rate_reset=""
@@ -74,9 +78,8 @@ if [ -n "$reset_epoch" ]; then
 fi
 
 # Git 브랜치 / worktree / dirty 상태 (cwd가 git repo가 아니거나 git이 없으면 조용히 스킵)
-# cwd 파싱이 실패했을 때도 브랜치는 살아남도록 현재 작업 디렉터리로 폴백한다.
+# cwd는 위에서 이미 "실제 현재 디렉터리"로 확정됨(캐시 미개입) → 항상 올바른 워크트리 표시.
 git_info=""
-cwd="${cwd:-$PWD}"
 if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
     branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -z "$branch" ] || [ "$branch" = "HEAD" ]; then
