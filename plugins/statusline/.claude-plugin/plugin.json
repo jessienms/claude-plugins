@@ -2,7 +2,7 @@
   "name": "statusline",
   "displayName": "Statusline Gauges",
   "description": "Claude Code status line with model/git/time header plus gradient gauge bars for context window usage and 5-hour rate limit (with reset time). Cross-platform: uses jq when available, falls back to PowerShell on Windows.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "jessienms"
   },
