@@ -10,6 +10,15 @@ now=$(date +%H:%M:%S)
 # 필드 구분자: ASCII unit separator (경로 등 값에 섞일 수 없는 문자)
 US=$'\x1f'
 
+# 직전 정상 파싱값 캐시 (pwsh 지연/중단 등으로 이번 파싱이 실패하면 이 값으로 폴백)
+CACHE_FILE="$HOME/.claude/.statusline-cache"
+
+# pwsh가 멈춰 렌더 전체를 물고 늘어지지 않도록 상한 (있으면 사용)
+pwsh_guard=""
+if command -v timeout &>/dev/null; then
+    pwsh_guard="timeout 4"
+fi
+
 parsed=""
 if command -v jq &>/dev/null; then
     parsed=$(printf '%s' "$input" | jq -r '
@@ -38,13 +47,24 @@ else
         "$model$us$cwd$us$ctx$us$rate$us$reset"
     '
     if command -v pwsh &>/dev/null; then
-        parsed=$(printf '%s' "$input" | pwsh -NoProfile -NonInteractive -Command "$ps_script" 2>/dev/null)
+        parsed=$(printf '%s' "$input" | $pwsh_guard pwsh -NoProfile -NonInteractive -Command "$ps_script" 2>/dev/null)
     elif command -v powershell &>/dev/null; then
-        parsed=$(printf '%s' "$input" | powershell -NoProfile -NonInteractive -Command "$ps_script" 2>/dev/null)
+        parsed=$(printf '%s' "$input" | $pwsh_guard powershell -NoProfile -NonInteractive -Command "$ps_script" 2>/dev/null)
     fi
 fi
 
 parsed=$(printf '%s' "$parsed" | tr -d '\r\n')
+
+# 파싱 성공 판정: 첫 필드(model)가 비어있지 않으면 정상으로 간주.
+# 성공 → 캐시 갱신 / 실패(pwsh 지연·중단, 파싱 오류) → 직전 정상값으로 폴백.
+# status line은 Claude Code가 주기적으로 재호출하므로, 다음 렌더에서 pwsh가
+# 회복되면 캐시가 자동으로 갱신된다(= 사실상의 재시도).
+if [ -n "${parsed%%$US*}" ]; then
+    printf '%s' "$parsed" > "$CACHE_FILE" 2>/dev/null
+elif [ -f "$CACHE_FILE" ]; then
+    parsed=$(cat "$CACHE_FILE" 2>/dev/null)
+fi
+
 IFS="$US" read -r model cwd used rate_used reset_epoch <<< "$parsed"
 
 # 리셋 시각: epoch → HH:mm (GNU date는 -d @, BSD/macOS date는 -r)
@@ -54,7 +74,9 @@ if [ -n "$reset_epoch" ]; then
 fi
 
 # Git 브랜치 / worktree / dirty 상태 (cwd가 git repo가 아니거나 git이 없으면 조용히 스킵)
+# cwd 파싱이 실패했을 때도 브랜치는 살아남도록 현재 작업 디렉터리로 폴백한다.
 git_info=""
+cwd="${cwd:-$PWD}"
 if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
     branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null)
     if [ -z "$branch" ] || [ "$branch" = "HEAD" ]; then
