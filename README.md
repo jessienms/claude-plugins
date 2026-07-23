@@ -1,5 +1,7 @@
 # claude-plugins
 
+> **Codex 사용자라면?** → [codex/README.md](codex/README.md) 를 참고하세요.
+
 [jessienms](https://github.com/jessienms)의 Claude Code 플러그인 마켓플레이스입니다.
 
 ## 설치

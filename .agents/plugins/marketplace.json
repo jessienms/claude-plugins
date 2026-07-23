@@ -1,0 +1,23 @@
+{
+  "name": "jessienms-codex-plugins",
+  "description": "Codex CLI plugins by jessienms",
+  "owner": {
+    "name": "jessienms"
+  },
+  "plugins": [
+    {
+      "name": "csharp-solid-principles",
+      "source": {
+        "source": "local",
+        "path": "./codex/plugins/csharp-solid-principles"
+      },
+      "description": "C# 예제로 SOLID 원칙(SRP/OCP/LSP/ISP/DIP)을 점검하는 체크리스트 스킬 — 원칙별 위반 예시·리팩터링·감지 패턴 (한국어)",
+      "author": {
+        "name": "jessienms"
+      },
+      "homepage": "https://github.com/jessienms/claude-plugins",
+      "license": "MIT",
+      "keywords": ["csharp", "dotnet", "solid", "code-review", "refactoring", "design"]
+    }
+  ]
+}
