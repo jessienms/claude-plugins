@@ -1,13 +1,22 @@
 {
   "name": "csharp-solid-principles",
-  "displayName": "C# SOLID 원칙",
-  "description": "C# 예제로 SOLID 원칙(SRP, OCP, LSP, ISP, DIP)을 점검하는 체크리스트 스킬. 각 원칙마다 위반 예시, 리팩터링 결과, 감지 패턴을 제공한다. 클래스 설계 리뷰나 리팩터링, SOLID 관련 질문에 사용한다. (Codex판)",
   "version": "1.0.0",
+  "description": "C# 예제로 SOLID 원칙(SRP, OCP, LSP, ISP, DIP)을 점검하는 체크리스트 스킬. 각 원칙마다 위반 예시, 리팩터링 결과, 감지 패턴을 제공한다.",
   "author": {
     "name": "jessienms"
   },
   "homepage": "https://github.com/jessienms/claude-plugins",
+  "repository": "https://github.com/jessienms/claude-plugins",
   "license": "MIT",
   "keywords": ["csharp", "dotnet", "solid", "code-review", "refactoring", "design"],
-  "skills": ["./skills/csharp-solid-principles"]
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "C# SOLID 원칙",
+    "shortDescription": "C# 코드의 SOLID 원칙 점검 체크리스트",
+    "longDescription": "SRP/OCP/LSP/ISP/DIP 각각에 대해 위반 예시·리팩터링·감지 패턴을 제공한다. 리뷰 모드에서는 독립 리뷰어 규율로 점검하고 다섯 원칙을 별점 5점 만점으로 평가한다.",
+    "developerName": "jessienms",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "이 클래스를 SOLID 원칙으로 리뷰해줘."
+  }
 }

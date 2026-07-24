@@ -2,31 +2,35 @@
 
 [jessienms](https://github.com/jessienms)의 Codex CLI 플러그인 마켓플레이스입니다.
 
+> 명령은 TUI 슬래시 명령이 아니라 터미널의 `codex` 서브커맨드입니다.
+> TUI 안에서는 `/plugins` 브라우저로 설치·토글할 수도 있습니다.
+
 ## 마켓플레이스 등록
 
-마켓플레이스를 추가하세요 (레포 루트의 `.agents/plugins/marketplace.json`을 읽습니다):
+이 레포의 Git 마켓을 추가하세요 (레포 루트의 `.agents/plugins/marketplace.json`을 읽습니다):
 
-```
-/plugin marketplace add jessienms/claude-plugins
+```bash
+codex plugin marketplace add jessienms/claude-plugins
+# 특정 브랜치/태그로 고정하려면
+codex plugin marketplace add jessienms/claude-plugins --ref main
 ```
 
-특정 브랜치·태그로 고정하려면:
+등록된 마켓 확인:
 
-```
-/plugin marketplace add jessienms/claude-plugins@main     # 브랜치
-/plugin marketplace add jessienms/claude-plugins#v1.0.0    # 태그
+```bash
+codex plugin marketplace list
 ```
 
 ## 플러그인 설치
 
-등록한 마켓(`jessienms-codex-plugins`)에서 이름으로 설치한 뒤 리로드하세요:
+마켓 이름(`jessienms-codex-plugins`)을 붙여 설치합니다:
 
-```
-/plugin install csharp-solid-principles@jessienms-codex-plugins
-/reload-plugins
+```bash
+codex plugin add csharp-solid-principles@jessienms-codex-plugins
 ```
 
-또는 `/plugins` 를 실행해 브라우저 UI에서 설치할 수도 있습니다.
+설치 후 **새 Codex 스레드**를 시작하면 스킬·도구가 로드됩니다.
+설치된 플러그인은 `codex plugin list` 로 확인합니다.
 
 ## 플러그인
 

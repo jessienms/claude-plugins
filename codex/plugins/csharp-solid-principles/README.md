@@ -42,15 +42,14 @@ SOLID 원칙 체크리스트와 상세한 C# 예제. 각 원칙은 위반 예시
 
 ## 설치
 
-이 마켓플레이스에서:
+터미널에서 이 마켓을 추가한 뒤 설치합니다 (`codex` 서브커맨드):
 
-```
-/plugin marketplace add jessienms/claude-plugins
-/plugin install csharp-solid-principles@jessienms-codex-plugins
-/reload-plugins
+```bash
+codex plugin marketplace add jessienms/claude-plugins
+codex plugin add csharp-solid-principles@jessienms-codex-plugins
 ```
 
-또는 `/plugins` 브라우저 UI에서 설치할 수 있습니다.
+설치 후 **새 Codex 스레드**를 시작하면 로드됩니다. TUI에서는 `/plugins` 브라우저로도 설치할 수 있습니다.
 
 ---
 
