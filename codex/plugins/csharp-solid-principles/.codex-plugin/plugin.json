@@ -1,6 +1,6 @@
 {
   "name": "csharp-solid-principles",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "C# 예제로 SOLID 원칙(SRP, OCP, LSP, ISP, DIP)을 점검하는 체크리스트 스킬. 각 원칙마다 위반 예시, 리팩터링 결과, 감지 패턴을 제공한다.",
   "author": {
     "name": "jessienms"
