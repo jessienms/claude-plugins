@@ -51,6 +51,10 @@ codex plugin add csharp-solid-principles@jessienms-codex-plugins
 
 설치 후 **새 Codex 스레드**를 시작하면 로드됩니다. TUI에서는 `/plugins` 브라우저로도 설치할 수 있습니다.
 
+> **명령어 없이 설치하려면** → [Codex 앱 화면에서 클릭으로 설치하기](../../README.md#a-codex-앱에서-설치하기) (스크린샷 안내)
+> 앱의 마켓플레이스 추가 다이얼로그에서는 **출처** 칸에 `jessienms/claude-plugins` 만 입력하고
+> **Git ref 와 Sparse 경로는 비워 두세요** — 흐리게 보이는 `main`/`plugins/codex` 는 입력값이 아니라 예시입니다.
+
 ---
 
 ## 동작 방식
