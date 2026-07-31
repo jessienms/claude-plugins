@@ -37,6 +37,7 @@ codex plugin add csharp-solid-principles@jessienms-codex-plugins
 | 플러그인 | 설명 |
 |----------|------|
 | [csharp-solid-principles](plugins/csharp-solid-principles/README.md) | C# 예제로 SOLID 원칙(SRP/OCP/LSP/ISP/DIP)을 점검하는 체크리스트 스킬 — 원칙별 위반 예시·리팩터링·감지 패턴 (한국어) |
+| [google-chat-send](plugins/google-chat-send/README.md) | 팀 Google Chat Space로 메시지·알림 전송 — 용도별 named webhook, 중복 전송 방지, webhook 비밀 보호 |
 
 ## 라이선스
 
