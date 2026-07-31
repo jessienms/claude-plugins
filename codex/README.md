@@ -51,6 +51,7 @@ codex plugin marketplace add jessienms/claude-plugins
 # 2) 플러그인 설치 — 마켓 이름(jessienms-codex-plugins)을 붙입니다
 codex plugin add google-chat-send@jessienms-codex-plugins
 codex plugin add csharp-solid-principles@jessienms-codex-plugins
+codex plugin add todo@jessienms-codex-plugins
 ```
 
 확인 명령:
@@ -72,6 +73,7 @@ codex plugin list               # 설치된 플러그인
 |----------|------|
 | [csharp-solid-principles](plugins/csharp-solid-principles/README.md) | C# 예제로 SOLID 원칙(SRP/OCP/LSP/ISP/DIP)을 점검하는 체크리스트 스킬 — 원칙별 위반 예시·리팩터링·감지 패턴 (한국어) |
 | [google-chat-send](plugins/google-chat-send/README.md) | 팀 Google Chat Space로 메시지·알림 전송 — 용도별 named webhook, 중복 전송 방지, webhook 비밀 보호 |
+| [todo](plugins/todo/README.md) | 프로젝트 로컬 할 일 목록(`.claude/todo/todo.md`) — 목록은 제목만, 완료 항목은 항목당 파일 하나로 백업해 컨텍스트를 아낌 |
 
 ## 라이선스
 

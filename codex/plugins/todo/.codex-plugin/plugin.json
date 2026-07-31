@@ -1,0 +1,22 @@
+{
+  "name": "todo",
+  "version": "1.0.0",
+  "description": "프로젝트 로컬 파일(.claude/todo/todo.md)로 세션이 끝나도 남는 할 일 목록을 관리하는 스킬. 목록은 제목만, 상세는 지정한 항목만, 완료 항목은 항목당 파일 하나로 백업해 컨텍스트를 아낀다.",
+  "author": {
+    "name": "jessienms"
+  },
+  "homepage": "https://github.com/jessienms/claude-plugins",
+  "repository": "https://github.com/jessienms/claude-plugins",
+  "license": "MIT",
+  "keywords": ["todo", "checklist", "task", "notes", "workflow"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "프로젝트 TODO",
+    "shortDescription": "세션이 끝나도 남는 프로젝트 로컬 할 일 목록",
+    "longDescription": "할 일을 프로젝트의 .claude/todo/todo.md 에 체크리스트로 적어 두고, 며칠 뒤 다른 세션에서 이어받는다. 모든 조작이 헬퍼 스크립트를 거치므로 목록 조회는 제목만, 상세 조회는 지정한 항목만, 완료 처리는 해당 블록만 잘라내 backup/ 으로 옮긴다. 목록이 길어져도 todo.md 전문이 컨텍스트에 올라오지 않는다.",
+    "developerName": "jessienms",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "지금 할 일 뭐 남았어?"
+  }
+}

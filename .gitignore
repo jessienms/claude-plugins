@@ -1,11 +1,9 @@
 # Cygwin/Git Bash 크래시 덤프
 *.stackdump
 
-# Claude Code 로컬 설정 (머신별)
-.claude/settings.local.json
-
-# google-chat-send 데이터 폴더 — webhook URL(비밀)·전송 로그가 들어간다
-.claude/google-chat/
+# Claude Code / 스킬 로컬 데이터 — 머신별 설정(settings.local.json),
+# google-chat-send webhook(비밀), todo 목록 등 개인 데이터가 들어간다
+.claude/
 
 # OS 부산물
 Thumbs.db
