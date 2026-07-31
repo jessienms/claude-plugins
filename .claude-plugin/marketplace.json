@@ -48,6 +48,17 @@
       "homepage": "https://github.com/jessienms/claude-plugins",
       "license": "MIT",
       "tags": ["csharp", "dotnet", "solid", "code-review", "refactoring"]
+    },
+    {
+      "name": "todo",
+      "source": "./plugins/todo",
+      "description": "Project-local persistent TODO list in .claude/todo/todo.md — titles-only listing, per-item archive on completion, all via a helper script so the full list never floods the context",
+      "author": {
+        "name": "jessienms"
+      },
+      "homepage": "https://github.com/jessienms/claude-plugins",
+      "license": "MIT",
+      "tags": ["todo", "checklist", "task", "notes", "workflow"]
     }
   ]
 }
