@@ -81,7 +81,9 @@ Set-Content -Path $urlFile -Value $Url.Trim() -NoNewline -Encoding UTF8
 $Purpose = ($Purpose -replace "[`t`r`n]", ' ').Trim()
 $metaLines = @()
 if (Test-Path $metaFile) {
-    $metaLines = Get-Content -Path $metaFile | Where-Object { ($_ -split "`t")[0] -ne $Name }
+    # @() 로 감싸지 않으면 남는 줄이 1개일 때 파이프라인이 배열이 아닌 string 을 돌려주고,
+    # 이후 += 가 배열 추가가 아니라 문자열 이어붙이기가 되어 두 줄이 한 줄로 붙는다.
+    $metaLines = @(Get-Content -Path $metaFile | Where-Object { ($_ -split "`t")[0] -ne $Name })
 }
 $metaLines += "{0}`t{1}" -f $Name, $Purpose
 Set-Content -Path $metaFile -Value $metaLines -Encoding UTF8
