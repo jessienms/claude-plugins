@@ -22,8 +22,9 @@
   같은 이름이 이미 등록돼 있어도 덮어쓴다.
 
 .PARAMETER DataDir
-  비밀·로그가 위치한 데이터 폴더. 기본값은 `$env:CLAUDE_PROJECT_DIR`
-  (없으면 현재 작업 폴더) 아래 `.claude/google-chat`.
+  비밀·로그가 위치한 데이터 폴더. 생략하면 `_datadir.ps1` 의 규칙으로 결정한다
+  (프로젝트 폴더의 기존 폴더 → git 메인 체크아웃 → 프로젝트 폴더 기본값 순).
+  결정된 경로는 init.ps1 로 확인할 수 있다.
 
 .EXAMPLE
   pwsh add.ps1 -Name qa-team -Purpose "QA 팀 채널 — 버그 리포트 공유용" -Url "https://chat.googleapis.com/v1/spaces/..."
@@ -55,12 +56,12 @@ if ($Url -notmatch '^https://chat\.googleapis\.com/') {
     Write-Warning 'URL 이 Google Chat webhook 형식(https://chat.googleapis.com/...)이 아닙니다. 그대로 저장합니다.'
 }
 
-# 데이터 폴더(비밀·로그) 위치 결정: 프로젝트의 .claude/google-chat 가 기본.
+# 데이터 폴더(비밀·로그) 위치 결정: 규칙은 _datadir.ps1 에 모아 뒀다.
 # (스킬 폴더는 플러그인 설치 캐시라 업데이트 시 갈리므로 비밀·상태를 두지 않는다)
-if ([string]::IsNullOrWhiteSpace($DataDir)) {
-    $projectRoot = [string]::IsNullOrWhiteSpace($env:CLAUDE_PROJECT_DIR) ? (Get-Location).Path : $env:CLAUDE_PROJECT_DIR
-    $DataDir = Join-Path $projectRoot '.claude' 'google-chat'
-}
+. (Join-Path $PSScriptRoot '_datadir.ps1')
+$resolvedDataDir = Resolve-GoogleChatDataDir -DataDir $DataDir
+$DataDir = $resolvedDataDir.Path
+
 $urlFile  = Join-Path $DataDir "webhook.$Name.url"
 $metaFile = Join-Path $DataDir 'webhooks.meta.tsv'
 
@@ -89,3 +90,4 @@ $metaLines += "{0}`t{1}" -f $Name, $Purpose
 Set-Content -Path $metaFile -Value $metaLines -Encoding UTF8
 
 Write-Output "webhook '$Name' 등록 완료 (용도: $Purpose). 전송 시 send.ps1 -Webhook $Name 으로 사용합니다."
+Write-Output "데이터 폴더: $DataDir ($($resolvedDataDir.Rule))"

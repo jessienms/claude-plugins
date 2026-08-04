@@ -16,8 +16,9 @@
   sent.log(전송 이력)도 함께 삭제한다.
 
 .PARAMETER DataDir
-  비밀·로그가 위치한 데이터 폴더. 기본값은 `$env:CLAUDE_PROJECT_DIR`
-  (없으면 현재 작업 폴더) 아래 `.claude/google-chat`.
+  비밀·로그가 위치한 데이터 폴더. 생략하면 `_datadir.ps1` 의 규칙으로 결정한다
+  (프로젝트 폴더의 기존 폴더 → git 메인 체크아웃 → 프로젝트 폴더 기본값 순).
+  삭제 전 dry-run 출력에 결정된 경로와 근거가 함께 표시된다.
 
 .EXAMPLE
   pwsh clearall.ps1
@@ -36,12 +37,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# 데이터 폴더(비밀·로그) 위치 결정: 프로젝트의 .claude/google-chat 가 기본.
+# 데이터 폴더(비밀·로그) 위치 결정: 규칙은 _datadir.ps1 에 모아 뒀다.
 # (스킬 폴더는 플러그인 설치 캐시라 업데이트 시 갈리므로 비밀·상태를 두지 않는다)
-if ([string]::IsNullOrWhiteSpace($DataDir)) {
-    $projectRoot = [string]::IsNullOrWhiteSpace($env:CLAUDE_PROJECT_DIR) ? (Get-Location).Path : $env:CLAUDE_PROJECT_DIR
-    $DataDir = Join-Path $projectRoot '.claude' 'google-chat'
-}
+. (Join-Path $PSScriptRoot '_datadir.ps1')
+$resolvedDataDir = Resolve-GoogleChatDataDir -DataDir $DataDir
+$DataDir = $resolvedDataDir.Path
 
 if (-not (Test-Path $DataDir)) {
     Write-Output "데이터 폴더가 없습니다: $DataDir — 이미 초기 상태입니다."
@@ -63,6 +63,10 @@ if ($targets.Count -eq 0) {
     exit 0
 }
 
+# 파괴적 작업이므로 "어느 폴더를 지우는지" 를 근거와 함께 먼저 보여준다.
+Write-Output "데이터 폴더: $DataDir"
+Write-Output "경로 결정 규칙: $($resolvedDataDir.Rule)"
+Write-Output ''
 Write-Output "삭제 대상 ($($targets.Count)개):"
 foreach ($t in $targets) { Write-Output "  - $($t.Name)" }
 

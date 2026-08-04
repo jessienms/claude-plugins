@@ -16,8 +16,9 @@
   이미 default webhook 이 설정돼 있어도 덮어쓴다.
 
 .PARAMETER DataDir
-  비밀·로그가 위치한 데이터 폴더. 기본값은 `$env:CLAUDE_PROJECT_DIR`
-  (없으면 현재 작업 폴더) 아래 `.claude/google-chat`.
+  비밀·로그가 위치한 데이터 폴더. 생략하면 `_datadir.ps1` 의 규칙으로 결정한다
+  (프로젝트 폴더의 기존 폴더 → git 메인 체크아웃 → 프로젝트 폴더 기본값 순).
+  결정된 경로와 그 근거는 상태 리포트에 함께 출력된다.
 
 .EXAMPLE
   pwsh init.ps1
@@ -35,12 +36,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# 데이터 폴더(비밀·로그) 위치 결정: 프로젝트의 .claude/google-chat 가 기본.
+# 데이터 폴더(비밀·로그) 위치 결정: 규칙은 _datadir.ps1 에 모아 뒀다.
 # (스킬 폴더는 플러그인 설치 캐시라 업데이트 시 갈리므로 비밀·상태를 두지 않는다)
-if ([string]::IsNullOrWhiteSpace($DataDir)) {
-    $projectRoot = [string]::IsNullOrWhiteSpace($env:CLAUDE_PROJECT_DIR) ? (Get-Location).Path : $env:CLAUDE_PROJECT_DIR
-    $DataDir = Join-Path $projectRoot '.claude' 'google-chat'
-}
+. (Join-Path $PSScriptRoot '_datadir.ps1')
+$resolvedDataDir = Resolve-GoogleChatDataDir -DataDir $DataDir
+$DataDir = $resolvedDataDir.Path
+
 $defaultFile = Join-Path $DataDir 'webhook.url'
 $metaFile    = Join-Path $DataDir 'webhooks.meta.tsv'
 
@@ -79,6 +80,7 @@ if (Test-Path $DataDir) {
 }
 
 Write-Output "데이터 폴더    : $DataDir $((Test-Path $DataDir) ? '' : '(없음)')"
+Write-Output "경로 결정 규칙 : $($resolvedDataDir.Rule)"
 Write-Output "default webhook: $($hasDefault ? '설정됨' : '없음 — init.ps1 -Url <webhook주소> 로 설정하세요')"
 if ($named.Count -gt 0) {
     Write-Output "named webhook  : $($named.Count)개"

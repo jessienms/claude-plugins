@@ -32,8 +32,9 @@
   사용할 webhook url 파일 경로를 직접 지정 (테스트용). 지정 시 -Webhook 보다 우선한다.
 
 .PARAMETER DataDir
-  비밀·로그가 위치한 데이터 폴더. 기본값은 `$env:CLAUDE_PROJECT_DIR`
-  (없으면 현재 작업 폴더) 아래 `.claude/google-chat`.
+  비밀·로그가 위치한 데이터 폴더. 생략하면 `_datadir.ps1` 의 규칙으로 결정한다
+  (프로젝트 폴더의 기존 폴더 → git 메인 체크아웃 → 프로젝트 폴더 기본값 순).
+  결정된 경로는 init.ps1 로 확인할 수 있다.
 
 .EXAMPLE
   pwsh send.ps1 -MessageFile draft.txt -Tag "r65019"
@@ -57,12 +58,12 @@ $MaxMessageLength = 4096
 
 $ErrorActionPreference = 'Stop'
 
-# 데이터 폴더(비밀·로그) 위치 결정: 프로젝트의 .claude/google-chat 가 기본.
+# 데이터 폴더(비밀·로그) 위치 결정: 규칙은 _datadir.ps1 에 모아 뒀다.
 # (스킬 폴더는 플러그인 설치 캐시라 업데이트 시 갈리므로 비밀·상태를 두지 않는다)
-if ([string]::IsNullOrWhiteSpace($DataDir)) {
-    $projectRoot = [string]::IsNullOrWhiteSpace($env:CLAUDE_PROJECT_DIR) ? (Get-Location).Path : $env:CLAUDE_PROJECT_DIR
-    $DataDir = Join-Path $projectRoot '.claude' 'google-chat'
-}
+. (Join-Path $PSScriptRoot '_datadir.ps1')
+$resolvedDataDir = Resolve-GoogleChatDataDir -DataDir $DataDir
+$DataDir = $resolvedDataDir.Path
+
 # 사용할 webhook 결정: -WebhookFile(직접 경로) > -Webhook(이름) > default.
 if (-not [string]::IsNullOrWhiteSpace($WebhookFile)) {
     $webhookName = [System.IO.Path]::GetFileNameWithoutExtension($WebhookFile)
@@ -87,7 +88,8 @@ if (-not (Test-Path $WebhookFile)) {
             Where-Object { $_ }
     }
     $hint = ($available.Count -gt 0) ? "등록된 webhook: $($available -join ', ')." : 'init.ps1 로 default 를 먼저 설정하세요.'
-    Write-Error "webhook '$webhookName' 파일이 없습니다: $WebhookFile — $hint (추가 등록은 add.ps1)"
+    # 어느 데이터 폴더를 봤는지까지 알려줘야 "설정했는데 없다고 한다" 를 바로 진단할 수 있다.
+    Write-Error "webhook '$webhookName' 파일이 없습니다: $WebhookFile — $hint (추가 등록은 add.ps1) [데이터 폴더 결정: $($resolvedDataDir.Rule)]"
     exit 1
 }
 $url = (Get-Content -Raw -Path $WebhookFile).Trim()

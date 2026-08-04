@@ -34,16 +34,28 @@ description: 임의의 메시지·공지·공유 알림을 팀 Google Chat Space
 | `<skill-dir>/` | `init.ps1`  | 초기 설정·상태 점검. default webhook 설정(`-Url`), 등록 webhook 목록 출력. |
 | `<skill-dir>/` | `add.ps1`   | named webhook 등록(`-Name`/`-Purpose`/`-Url`). |
 | `<skill-dir>/` | `clearall.ps1` | 모든 webhook 설정 삭제(초기화). 기본 dry-run, `-Yes` 로 실제 삭제. |
+| `<skill-dir>/` | `_datadir.ps1` | 데이터 폴더 위치 결정 공통 로직. 위 스크립트들이 읽어 쓴다(직접 실행하지 않는다). |
 | `<프로젝트>/.claude/google-chat/` | `webhook.url`        | **(비밀)** default webhook. 절대 출력/로그/커밋 금지. |
 | `<프로젝트>/.claude/google-chat/` | `webhook.<이름>.url` | **(비밀)** named webhook (add.ps1 로 등록). 동일하게 출력 금지. |
 | `<프로젝트>/.claude/google-chat/` | `webhooks.meta.tsv`  | named webhook 의 용도 메타(`이름 \t 용도`). URL 은 없음. |
 | `<프로젝트>/.claude/google-chat/` | `sent.log`           | 전송 이력(`시각 \t Tag \t sent \t webhook이름`). 중복 전송 추적용. |
 
-> **데이터 폴더 위치 결정**: 스크립트는 `$env:CLAUDE_PROJECT_DIR` 이 있으면 그 아래,
-> 없으면 **현재 작업 폴더** 아래 `.claude/google-chat` 을 데이터 폴더로 본다. Codex 는 보통
-> 프로젝트 루트에서 실행되므로 현재 작업 폴더 폴백이 곧 프로젝트 루트다. **하위 폴더에서
-> 실행 중이라 위치가 애매하면 `-DataDir <프로젝트루트>/.claude/google-chat` 로 명시하라.**
-> 그러지 않으면 webhook 이 이미 설정돼 있는데도 "미설정"으로 보이는 혼란이 생긴다.
+> **데이터 폴더 위치 결정** (모든 스크립트 공통, `_datadir.ps1`). "프로젝트 폴더" 는
+> `$env:CLAUDE_PROJECT_DIR` 이 있으면 그 아래, 없으면 **현재 작업 폴더**다 — Codex 에는 보통
+> 그 환경변수가 없으므로 현재 작업 폴더가 기준이 된다. 아래 순서로 결정한다.
+>
+> 1. `-DataDir <경로>` 를 주면 그대로 쓴다. (항상 최우선)
+> 2. 프로젝트 폴더에 `.claude/google-chat` 이 **이미 있으면** 그대로 쓴다.
+> 3. git 저장소면 **메인 체크아웃**의 `.claude/google-chat` 을 쓴다.
+> 4. 그 외(비 git 폴더, git 미설치)는 프로젝트 폴더 아래 `.claude/google-chat`.
+>
+> 3번 덕분에 **저장소 하위 폴더에서 실행하거나 git worktree 안에서 작업해도 메인 체크아웃에
+> 등록해 둔 webhook 을 그대로 본다.** 예전처럼 `-DataDir` 을 손으로 붙일 필요는 없다.
+>
+> 어느 폴더가 왜 선택됐는지는 `init.ps1` 이 `경로 결정 규칙` 줄로 함께 출력한다.
+> 위치가 예상과 다르면 **`-DataDir` 을 붙이기 전에 그 줄을 먼저 확인한다.** (worktree/하위
+> 폴더에 실수로 만들어진 빈 데이터 폴더가 2번 규칙에 걸려 메인을 가리고 있을 수 있다 —
+> 그 폴더를 지우면 3번 규칙이 적용된다.)
 >
 > **커밋 금지**: 데이터 폴더에는 비밀(webhook URL)이 들어 있으므로, 프로젝트가 git 저장소라면
 > `.gitignore` 에 `.claude/google-chat/` 이 있는지 확인하고 없으면 추가한다.
