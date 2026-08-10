@@ -52,7 +52,7 @@
     {
       "name": "todo",
       "source": "./plugins/todo",
-      "description": "Project-local persistent TODO list in .claude/todo/todo.md — titles-only listing, per-item archive on completion, all via a helper script so the full list never floods the context",
+      "description": "Project-local persistent TODO list in .claude/todo/todo.md — titles-only listing, in-place edits that keep the item's ID, per-item archive on completion, all via a helper script so the full list never floods the context",
       "author": {
         "name": "jessienms"
       },

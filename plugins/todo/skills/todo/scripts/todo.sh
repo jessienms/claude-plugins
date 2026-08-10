@@ -21,6 +21,11 @@ todo.sh — .claude/todo/todo.md 를 다루는 헬퍼
                                 항목을 추가하고 새 ID 를 출력한다.
                                 --body - 로 주면 본문을 표준 입력에서 읽는다.
                                 --body 를 아예 생략하면 상세 없는 항목이 된다.
+  edit <ID> [--title "새 제목"] [--body "본문"] [--append "덧붙일 줄"] [--clear-body]
+                                기존 항목을 제자리에서 고친다 (ID 는 그대로 유지).
+                                --title 만 주면 상세는 그대로, --body 는 상세를 통째로
+                                교체, --append 는 상세 끝에 덧붙인다.
+                                --body / --append 도 - 로 주면 표준 입력에서 읽는다.
   list                          ID 와 제목만 나열한다 (상세는 출력하지 않는다)
   show <ID>...                  지정한 항목의 제목과 상세를 출력한다
   find <검색어>                 제목에 검색어가 들어간 항목의 ID/제목을 출력한다
@@ -136,6 +141,28 @@ extract_block() {
   ' "$TODO_FILE"
 }
 
+# 항목 블록을 파일 안 같은 자리에서 새 내용(파일)으로 갈아끼운다.
+replace_block() {
+  awk -v target="$1" -v newfile="$2" '
+    function emit(  line) {
+      while ((getline line < newfile) > 0) print line
+      close(newfile)
+    }
+    {
+      if (match($0, /^- \[[ xX]\] \(T[0-9]+\)/)) {
+        head = substr($0, 1, RLENGTH)
+        match(head, /T[0-9]+/)
+        skip = (substr(head, RSTART, RLENGTH) == target)
+        if (skip) { emit(); next }
+      } else if ($0 !~ /^[ \t]+[^ \t]/) {
+        skip = 0
+      }
+      if (!skip) print
+    }
+  ' "$TODO_FILE" > "$TODO_FILE.tmp"
+  mv "$TODO_FILE.tmp" "$TODO_FILE"
+}
+
 remove_block() {
   awk -v target="$1" '
     {
@@ -158,6 +185,18 @@ strip_title() {
     | sed -e 's/^- \[[ xX]\] ([Tt][0-9]*)[[:space:]]*//' \
           -e 's/[[:space:]]*<!--.*-->[[:space:]]*$//' \
           -e 's/[[:space:]]*$//'
+}
+
+# 제목 줄 끝 주석에서 added: / edited: 날짜를 뽑는다 (없으면 빈 문자열)
+meta_field() {
+  printf '%s' "$1" | sed -n "s/.*<!--[^>]*$2:\([0-9][0-9-]*\).*-->.*/\1/p"
+}
+
+# 상세를 todo.md 에 넣을 형태로 정규화:
+# 빈 줄 제거(리스트가 loose 해지는 것 방지) + 2칸 들여쓰기로 항목에 종속시킴
+indent_body() {
+  printf '%s\n' "$1" \
+    | sed -e 's/\r$//' -e 's/[[:space:]]*$//' -e '/^$/d' -e 's/^/  /'
 }
 
 # --- 서브커맨드 ------------------------------------------------------------
@@ -191,11 +230,88 @@ cmd_add() {
   id="$(next_id)"
   printf -- '- [ ] (%s) %s <!-- added:%s -->\n' "$id" "$title" "$TODAY" >> "$TODO_FILE"
   if [ -n "$body" ]; then
-    # 빈 줄 제거(리스트가 loose 해지는 것 방지) + 2칸 들여쓰기로 항목에 종속시킴
-    printf '%s\n' "$body" \
-      | sed -e 's/\r$//' -e 's/[[:space:]]*$//' -e '/^$/d' -e 's/^/  /' >> "$TODO_FILE"
+    indent_body "$body" >> "$TODO_FILE"
   fi
   printf '%s\n' "$id"
+}
+
+cmd_edit() {
+  [ $# -ge 1 ] || die "edit 에는 ID 가 필요합니다"
+  case "$1" in -*) die "edit 의 첫 인자는 ID 여야 합니다 (예: edit T7 --title \"...\")" ;; esac
+  id="$(normalize_id "$1")"; shift
+
+  set_title=0; new_title=""
+  set_body=0;  new_body="";    body_stdin=0
+  do_append=0; append_text=""; append_stdin=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --title) [ $# -ge 2 ] || die "--title 에 값이 필요합니다"
+               set_title=1; new_title="$2"; shift 2 ;;
+      --body)  [ $# -ge 2 ] || die "--body 에 값이 필요합니다"
+               set_body=1
+               if [ "$2" = "-" ]; then body_stdin=1; else new_body="$2"; fi
+               shift 2 ;;
+      --append) [ $# -ge 2 ] || die "--append 에 값이 필요합니다"
+               do_append=1
+               if [ "$2" = "-" ]; then append_stdin=1; else append_text="$2"; fi
+               shift 2 ;;
+      --clear-body) set_body=1; new_body=""; shift ;;
+      *) die "알 수 없는 인자: $1" ;;
+    esac
+  done
+
+  if [ $((set_title + set_body + do_append)) -eq 0 ]; then
+    die "고칠 내용이 없습니다 (--title / --body / --append / --clear-body 중 하나 이상 필요)"
+  fi
+  [ $((body_stdin + append_stdin)) -le 1 ] || die "--body - 와 --append - 는 함께 쓸 수 없습니다 (표준 입력은 하나뿐)"
+
+  ensure_file
+  block="$(extract_block "$id")"
+  [ -n "$block" ] || die "$id 항목을 찾을 수 없습니다 (list 로 확인하세요)"
+
+  head_line="$(printf '%s\n' "$block" | head -n 1)"
+  old_body="$(printf '%s\n' "$block" | tail -n +2 | sed 's/^  //')"
+  added="$(meta_field "$head_line" added)"
+  case "$head_line" in
+    '- [x]'*|'- [X]'*) box="x" ;;
+    *) box=" " ;;
+  esac
+
+  if [ "$set_title" -eq 1 ]; then
+    title="$new_title"
+  else
+    title="$(strip_title "$head_line")"
+  fi
+  [ -n "$title" ] || die "제목이 비었습니다"
+  case "$title" in *$'\n'*) die "제목은 한 줄이어야 합니다 (여러 줄은 --body 로)" ;; esac
+
+  # stdin 은 명시적으로 - 를 줬을 때만 읽는다 (add 와 같은 이유).
+  if [ "$body_stdin" -eq 1 ]; then new_body="$(cat)"; fi
+  if [ "$append_stdin" -eq 1 ]; then append_text="$(cat)"; fi
+
+  if [ "$set_body" -eq 1 ]; then body="$new_body"; else body="$old_body"; fi
+  if [ "$do_append" -eq 1 ]; then
+    if [ -n "$body" ]; then
+      body="$body
+$append_text"
+    else
+      body="$append_text"
+    fi
+  fi
+
+  meta="edited:$TODAY"
+  if [ -n "$added" ]; then meta="added:$added $meta"; fi
+
+  tmp="$TODO_DIR/.edit.$$"
+  {
+    printf -- '- [%s] (%s) %s <!-- %s -->\n' "$box" "$id" "$title" "$meta"
+    if [ -n "$body" ]; then indent_body "$body"; fi
+  } > "$tmp"
+  replace_block "$id" "$tmp"
+  rm -f "$tmp"
+
+  printf '%s 수정됨:\n' "$id"
+  extract_block "$id"
 }
 
 cmd_list() {
@@ -316,8 +432,9 @@ cmd_close() {
 
     head_line="$(printf '%s\n' "$block" | head -n 1)"
     title="$(strip_title "$head_line")"
-    added="$(printf '%s' "$head_line" | sed -n 's/.*<!--[[:space:]]*added:\([0-9-]*\)[[:space:]]*-->.*/\1/p')"
+    added="$(meta_field "$head_line" added)"
     [ -n "$added" ] || added="unknown"
+    edited="$(meta_field "$head_line" edited)"
     body="$(printf '%s\n' "$block" | tail -n +2 | sed 's/^  //')"
 
     out="$BACKUP_DIR/$id-$(slugify "$title").md"
@@ -333,6 +450,7 @@ cmd_close() {
       printf 'title: %s\n' "$(yaml_str "$title")"
       printf 'status: %s\n' "$status_field"
       printf 'added: %s\n' "$added"
+      if [ -n "$edited" ]; then printf 'edited: %s\n' "$edited"; fi
       printf 'closed: %s\n' "$TODAY"
       printf -- '---\n\n'
       printf '# %s\n' "$title"
@@ -366,6 +484,7 @@ sub="$1"; shift
 case "$sub" in
   init)   cmd_init "$@" ;;
   add)    cmd_add "$@" ;;
+  edit)   cmd_edit "$@" ;;
   list)   cmd_list "$@" ;;
   show)   cmd_show "$@" ;;
   find)   cmd_find "$@" ;;

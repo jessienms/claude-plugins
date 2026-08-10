@@ -40,6 +40,7 @@ codex plugin add todo@jessienms-codex-plugins
 - "방금 얘기한 재시도 로직, todo에 추가해줘" → 항목 추가
 - "지금 할 일 뭐 남았어?" → 제목 목록
 - "T7 상세 보여줘" → 항목 하나만 펼치기
+- "T7 제목 이렇게 바꿔줘", "거기에 이 내용도 적어둬" → ID 유지한 채 제자리 수정
 - "아까 그거 작업 끝났어, 완료로 해줘" → 목록에서 빼고 백업으로 보관
 - "이건 안 하기로 했으니 취소해" → 취소로 보관
 
@@ -69,7 +70,14 @@ codex plugin add todo@jessienms-codex-plugins
 
    그 항목의 상세만 출력됩니다. 며칠 전 결정해 둔 내용이 그대로 남아 있습니다.
 
-4. **끝났으면 완료 처리**
+4. **내용이 바뀌었으면 그 자리에서 수정**
+
+   > "T7 에 백오프는 2s/4s 로 하기로 했다고 적어둬"
+
+   상세 끝에 한 줄이 덧붙습니다. 제목만 바꾸거나 상세를 통째로 다시 쓸 수도 있고,
+   **ID(`T7`)와 등록 날짜는 그대로 유지**됩니다 — 취소 후 재등록이 아닙니다.
+
+5. **끝났으면 완료 처리**
 
    > "재시도 로직 다 됐어. 할일에서 빼줘"
 
@@ -127,6 +135,9 @@ ID(`T7`)는 한 번 발급되면 재사용되지 않으므로, 항목이 빠져�
 bash scripts/todo.sh add --title "제목" --body "- 상세"
 bash scripts/todo.sh list
 bash scripts/todo.sh show T7
+bash scripts/todo.sh edit T7 --title "새 제목"
+bash scripts/todo.sh edit T7 --append "- 덧붙일 상세"
+bash scripts/todo.sh edit T7 --body "- 상세를 통째로 교체"
 bash scripts/todo.sh done T7 --note "이렇게 처리함"
 bash scripts/todo.sh cancel T9
 bash scripts/todo.sh log

@@ -1,8 +1,8 @@
 {
   "name": "todo",
   "displayName": "Project TODO",
-  "description": "Project-local persistent TODO list in .claude/todo/todo.md — add, list titles only, and archive finished items one file each, all through a helper script so the full list never floods the context.",
-  "version": "1.0.0",
+  "description": "Project-local persistent TODO list in .claude/todo/todo.md — add, list titles only, edit an existing item in place, and archive finished items one file each, all through a helper script so the full list never floods the context.",
+  "version": "1.1.0",
   "author": {
     "name": "jessienms"
   },
