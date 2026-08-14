@@ -114,18 +114,21 @@ lookup_color() {
 # 색 값을 ANSI용 "R;G;B" 로 정규화. 해석 불가면 non-zero.
 resolve_rgb() {
     local v="$1" h r g b
+    # 프리셋은 "작은 네모 하나로 구분" 이 목적이라 색상환을 넓게 벌린 고채도 색을 쓴다.
+    # (게이지/브랜치명의 파스텔 팔레트와 일부러 다르게 간다)
     case "${v,,}" in
-        blue)     v="#8AADF4" ;;
-        green)    v="#A6DA95" ;;
-        red)      v="#ED8796" ;;
-        yellow)   v="#EED49F" ;;
-        mauve)    v="#C6A0F6" ;;
-        peach|orange) v="#F5A97F" ;;
-        teal)     v="#8BD5CA" ;;
-        pink)     v="#F5BDE7" ;;
-        sky)      v="#91D7E3" ;;
-        flamingo) v="#F0C6C6" ;;
-        gray|grey) v="#6E738D" ;;
+        red)             v="#FF2D2D" ;;
+        orange|peach)    v="#FF8A00" ;;
+        yellow)          v="#FFD400" ;;
+        lime)            v="#9EFF00" ;;
+        green)           v="#00E05A" ;;
+        teal)            v="#00E0C0" ;;
+        cyan|sky)        v="#00D5FF" ;;
+        blue)            v="#2E7BFF" ;;
+        purple|mauve)    v="#9B5CFF" ;;
+        magenta)         v="#FF3DE0" ;;
+        pink|flamingo)   v="#FF7AA8" ;;
+        gray|grey)       v="#B0B6BE" ;;
     esac
 
     case "$v" in

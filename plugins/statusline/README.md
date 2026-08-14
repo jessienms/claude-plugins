@@ -60,7 +60,8 @@ hotfix=237;135;150
 
 - 키는 **워크트리 폴더명**(브랜치명이 아님), 대소문자 구분 없음
 - 값은 `#RRGGBB` / `#RGB` / `R;G;B` / 프리셋 이름
-- 프리셋: `blue` `green` `red` `yellow` `mauve` `peach`(`orange`) `teal` `pink` `sky` `flamingo` `gray`
+- 프리셋(고채도 12색): `red` `orange` `yellow` `lime` `green` `teal` `cyan` `blue` `purple` `magenta` `pink` `gray`
+  - 별칭: `peach`→orange, `sky`→cyan, `mauve`→purple, `flamingo`→pink, `grey`→gray
 - 잘못된 값은 조용히 무시되어 네모만 생략됩니다
 
 메인 체크아웃(linked worktree가 아닌 곳)에서는 워크트리 이름 자체가 표시되지 않으므로 네모도 나오지 않습니다.

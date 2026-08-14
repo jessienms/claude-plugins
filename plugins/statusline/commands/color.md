@@ -50,14 +50,16 @@ git rev-parse --git-common-dir
 
 ## 프리셋 이름
 
+작은 네모 하나로 구분하는 게 목적이라, 색상환을 넓게 벌린 고채도 색으로 구성돼 있다.
+
 | 이름 | 값 | 이름 | 값 |
 |---|---|---|---|
-| `blue` | `#8AADF4` | `teal` | `#8BD5CA` |
-| `green` | `#A6DA95` | `pink` | `#F5BDE7` |
-| `red` | `#ED8796` | `sky` | `#91D7E3` |
-| `yellow` | `#EED49F` | `flamingo` | `#F0C6C6` |
-| `mauve` | `#C6A0F6` | `gray` (`grey`) | `#6E738D` |
-| `peach` (`orange`) | `#F5A97F` | | |
+| `red` | `#FF2D2D` | `cyan` (`sky`) | `#00D5FF` |
+| `orange` (`peach`) | `#FF8A00` | `blue` | `#2E7BFF` |
+| `yellow` | `#FFD400` | `purple` (`mauve`) | `#9B5CFF` |
+| `lime` | `#9EFF00` | `magenta` | `#FF3DE0` |
+| `green` | `#00E05A` | `pink` (`flamingo`) | `#FF7AA8` |
+| `teal` | `#00E0C0` | `gray` (`grey`) | `#B0B6BE` |
 
 ## 수행할 동작
 
