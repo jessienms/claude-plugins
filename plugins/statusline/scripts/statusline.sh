@@ -4,6 +4,7 @@
 #   2줄: Context 게이지 (컨텍스트 윈도우 사용률)
 #   3줄: Usage 게이지 (5시간 rate limit 사용률 + 리셋 시각)
 # JSON 파싱: jq 우선, 없으면 PowerShell 폴백 (Windows)
+# 워크트리별 색 네모: statusline-worktree-colors 설정 파일 참조 (/statusline:color 로 지정)
 input=$(cat)
 now=$(date +%H:%M:%S)
 
@@ -77,6 +78,86 @@ if [ -n "$reset_epoch" ]; then
     rate_reset=$(date -d "@$reset_epoch" +%H:%M 2>/dev/null || date -r "$reset_epoch" +%H:%M 2>/dev/null)
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 워크트리 색상 설정 (statusline-worktree-colors)
+#   포맷: 워크트리폴더명=색   (# 주석 / 빈 줄 무시, 키는 대소문자 무시)
+#   색  : #RRGGBB | #RGB | R;G;B | 프리셋 이름
+#   조회: <메인 체크아웃>/.claude/... 우선, 없는 키는 ~/.claude/... 로 폴백(키 단위 병합)
+#   잘못된 값은 조용히 무시한다 — status line에 에러가 새어나오면 안 된다.
+# ─────────────────────────────────────────────────────────────────────────────
+COLOR_FILE_NAME="statusline-worktree-colors"
+
+# 설정 파일에서 키에 해당하는 값 1개를 출력. 못 찾으면 non-zero.
+# 외부 프로세스(grep/sed)를 쓰지 않는다 — 렌더마다 호출되므로.
+lookup_color() {
+    local name="$1" file="$2" line key val
+    [ -f "$file" ] || return 1
+    name="${name,,}"
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%$'\r'}"                       # CRLF 대응
+        case "$line" in ''|'#'*) continue ;; esac
+        case "$line" in *'='*) ;; *) continue ;; esac
+        key="${line%%=*}"
+        val="${line#*=}"
+        key="${key#"${key%%[![:space:]]*}"}"       # 앞뒤 공백 제거
+        key="${key%"${key##*[![:space:]]}"}"
+        val="${val#"${val%%[![:space:]]*}"}"
+        val="${val%"${val##*[![:space:]]}"}"
+        if [ "${key,,}" = "$name" ] && [ -n "$val" ]; then
+            printf '%s' "$val"
+            return 0
+        fi
+    done < "$file"
+    return 1
+}
+
+# 색 값을 ANSI용 "R;G;B" 로 정규화. 해석 불가면 non-zero.
+resolve_rgb() {
+    local v="$1" h r g b
+    case "${v,,}" in
+        blue)     v="#8AADF4" ;;
+        green)    v="#A6DA95" ;;
+        red)      v="#ED8796" ;;
+        yellow)   v="#EED49F" ;;
+        mauve)    v="#C6A0F6" ;;
+        peach|orange) v="#F5A97F" ;;
+        teal)     v="#8BD5CA" ;;
+        pink)     v="#F5BDE7" ;;
+        sky)      v="#91D7E3" ;;
+        flamingo) v="#F0C6C6" ;;
+        gray|grey) v="#6E738D" ;;
+    esac
+
+    case "$v" in
+        '#'*)
+            h="${v#\#}"
+            case "$h" in
+                [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+                    r="${h:0:2}"; g="${h:2:2}"; b="${h:4:2}"
+                    ;;
+                [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])
+                    r="${h:0:1}${h:0:1}"; g="${h:1:1}${h:1:1}"; b="${h:2:1}${h:2:1}"
+                    ;;
+                *) return 1 ;;
+            esac
+            printf '%d;%d;%d' "0x$r" "0x$g" "0x$b"
+            return 0
+            ;;
+        *';'*';'*)
+            IFS=';' read -r r g b <<< "$v"
+            for h in "$r" "$g" "$b"; do
+                case "$h" in
+                    ''|*[!0-9]*) return 1 ;;
+                esac
+                [ "$h" -le 255 ] || return 1
+            done
+            printf '%d;%d;%d' "$r" "$g" "$b"
+            return 0
+            ;;
+    esac
+    return 1
+}
+
 # Git 브랜치 / worktree / dirty 상태 (cwd가 git repo가 아니거나 git이 없으면 조용히 스킵)
 # cwd는 위에서 이미 "실제 현재 디렉터리"로 확정됨(캐시 미개입) → 항상 올바른 워크트리 표시.
 git_info=""
@@ -88,7 +169,15 @@ if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-i
 
     if [ -n "$branch" ]; then
         # linked worktree 여부 판별: git-dir 경로에 /worktrees/ 가 포함되면 linked worktree
-        git_dir=$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)
+        # git-common-dir 은 같은 호출로 함께 받는다(메인 체크아웃 루트 = 그 dirname).
+        IFS=$'\n' read -r -d '' git_dir git_common_dir < <(
+            git -C "$cwd" rev-parse --git-dir --git-common-dir 2>/dev/null; printf '\0'
+        )
+        # --git-common-dir 미지원 등으로 통째로 실패하면 기존 방식으로 폴백(워크트리명은 유지, 색만 포기)
+        if [ -z "$git_dir" ]; then
+            git_dir=$(git -C "$cwd" rev-parse --git-dir 2>/dev/null)
+            git_common_dir=""
+        fi
         worktree_name=""
         case "$git_dir" in
             */worktrees/*|*\\worktrees\\*)
@@ -98,6 +187,23 @@ if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-i
                 fi
                 ;;
         esac
+
+        # 워크트리 색상 조회 (linked worktree 일 때만)
+        wt_rgb=""
+        if [ -n "$worktree_name" ]; then
+            wt_color=""
+            # linked worktree 에서 git-common-dir 은 항상 절대경로 <메인>/.git
+            if [ -n "$git_common_dir" ]; then
+                main_root=$(dirname "$git_common_dir")
+                wt_color=$(lookup_color "$worktree_name" "$main_root/.claude/$COLOR_FILE_NAME")
+            fi
+            if [ -z "$wt_color" ]; then
+                wt_color=$(lookup_color "$worktree_name" "$HOME/.claude/$COLOR_FILE_NAME")
+            fi
+            if [ -n "$wt_color" ]; then
+                wt_rgb=$(resolve_rgb "$wt_color") || wt_rgb=""
+            fi
+        fi
 
         # dirty/clean 상태
         status_out=$(git -C "$cwd" status --porcelain 2>/dev/null)
@@ -109,7 +215,12 @@ if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-i
 
         git_info="$(printf '\033[38;2;138;173;244m%s\033[0m' "$branch")"
         if [ -n "$worktree_name" ]; then
-            git_info="${git_info}$(printf ' \033[38;2;198;160;246m(%s)\033[0m' "$worktree_name")"
+            if [ -n "$wt_rgb" ]; then
+                # (█ DevA) — 네모만 지정색, 이름은 기존 mauve 유지
+                git_info="${git_info}$(printf ' \033[38;2;198;160;246m(\033[38;2;%sm\xe2\x96\x88\033[38;2;198;160;246m %s)\033[0m' "$wt_rgb" "$worktree_name")"
+            else
+                git_info="${git_info}$(printf ' \033[38;2;198;160;246m(%s)\033[0m' "$worktree_name")"
+            fi
         fi
         git_info="${git_info} ${dirty_indicator}"
     fi

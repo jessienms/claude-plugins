@@ -30,3 +30,5 @@ description: 게이지형 status line을 설치합니다 (스크립트 복사 + 
    - 1줄: 모델 이름 | git 브랜치 (worktree 이름, dirty ●/clean ✓) | 현재 시각
    - 2줄: Context — 컨텍스트 윈도우 사용률 게이지
    - 3줄: Usage — 5시간 rate limit 사용률 게이지와 리셋 시각
+
+   덧붙여, 워크트리를 여러 개 쓴다면 `/statusline:color` 로 워크트리마다 색을 지정해 이름 앞에 색 네모(`(█ DevA)`)를 띄울 수 있다고 안내한다. 색을 지정하지 않은 워크트리는 네모 없이 표시된다.
