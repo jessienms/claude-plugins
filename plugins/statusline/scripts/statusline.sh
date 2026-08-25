@@ -1,8 +1,9 @@
 #!/bin/bash
 # Claude Code status line
-#   1줄: 모델 | git 브랜치(worktree, dirty 상태) | 현재 세션의 작업 폴더
-#   2줄: Context 게이지 (컨텍스트 윈도우 사용률)
-#   3줄: Usage 게이지 (5시간 rate limit 사용률 + 리셋 시각)
+#   1줄: 현재 세션의 작업 폴더
+#   2줄: 모델 | git 브랜치(worktree, dirty 상태)
+#   3줄: Context 게이지 (컨텍스트 윈도우 사용률)
+#   4줄: Usage 게이지 (5시간 rate limit 사용률 + 리셋 시각)
 # JSON 파싱: jq 우선, 없으면 PowerShell 폴백 (Windows)
 # 워크트리별 색 네모: statusline-worktree-colors 설정 파일 참조 (/statusline:color 로 지정)
 input=$(cat)
@@ -280,25 +281,28 @@ fi
 
 sep="$(printf ' \033[38;2;100;100;100m|\033[0m ')"
 
-# 첫번째 줄: [model] | [git] | [작업 폴더]
-line1_parts=()
+# 첫번째 줄: [작업 폴더]
+if [ -n "$cwd_display" ]; then
+    printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display"
+fi
+printf '\n'
+
+# 두번째 줄: [model] | [git]
+line2_parts=()
 if [ -n "$model" ]; then
-    line1_parts+=("$(printf '\033[38;2;238;212;159m%s\033[0m' "$model")")
+    line2_parts+=("$(printf '\033[38;2;238;212;159m%s\033[0m' "$model")")
 fi
 if [ -n "$git_info" ]; then
-    line1_parts+=("$git_info")
-fi
-if [ -n "$cwd_display" ]; then
-    line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display")")
+    line2_parts+=("$git_info")
 fi
 
-printf '%s' "${line1_parts[0]}"
-for ((i=1; i<${#line1_parts[@]}; i++)); do
-    printf '%s%s' "$sep" "${line1_parts[$i]}"
+printf '%s' "${line2_parts[0]}"
+for ((i=1; i<${#line2_parts[@]}; i++)); do
+    printf '%s%s' "$sep" "${line2_parts[$i]}"
 done
 printf '\n'
 
-# 두번째 줄: Context    [게이지 20칸] X% (값이 없으면 비활성 게이지 + 미확인 표시)
+# 세번째 줄: Context    [게이지 20칸] X% (값이 없으면 비활성 게이지 + 미확인 표시)
 if [ -n "$used" ]; then
     gauge=$(make_gauge "$used" "ctx")
     printf '\033[38;2;198;160;246mContext    \033[0m%s \033[38;2;198;160;246m%s%%\033[0m\n' "$gauge" "$used"
@@ -307,7 +311,7 @@ else
     printf '\033[38;2;198;160;246mContext    \033[0m%s \033[38;2;90;90;90m미확인\033[0m\n' "$gauge"
 fi
 
-# 세번째 줄: Usage      [게이지 20칸] X% (리셋 HH:mm) (값이 없으면 비활성 게이지 + 미확인 표시)
+# 네번째 줄: Usage      [게이지 20칸] X% (리셋 HH:mm) (값이 없으면 비활성 게이지 + 미확인 표시)
 if [ -n "$rate_used" ]; then
     gauge=$(make_gauge "$rate_used" "usage")
     if [ -n "$rate_reset" ]; then

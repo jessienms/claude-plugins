@@ -3,15 +3,17 @@
 Claude Code 하단에 **게이지형 status line**을 표시합니다.
 
 ```
-Fable 5 | main ● | ~/projects/claude-plugins
+~/projects/claude-plugins
+Fable 5 | main ●
 Context    ████████░░░░░░░░░░░░ 42%
 Usage      ███████░░░░░░░░░░░░░ 37% (리셋 17:13)
 ```
 
-- **1줄**: 모델 이름 | git 브랜치 (linked worktree 이름, dirty ●/clean ✓ 표시) | 현재 세션의 작업 폴더 (홈 디렉터리는 `~`로 축약)
+- **1줄**: 현재 세션의 작업 폴더 (홈 디렉터리는 `~`로 축약)
+- **2줄**: 모델 이름 | git 브랜치 (linked worktree 이름, dirty ●/clean ✓ 표시)
   - 워크트리에 색을 지정하면 이름 앞에 색 네모가 붙습니다 → `main (██ DevA) ✓`
-- **2줄**: Context — 컨텍스트 윈도우 사용률 (라벤더 그라데이션 게이지)
-- **3줄**: Usage — 5시간 rate limit 사용률과 리셋 시각 (코럴 그라데이션 게이지)
+- **3줄**: Context — 컨텍스트 윈도우 사용률 (라벤더 그라데이션 게이지)
+- **4줄**: Usage — 5시간 rate limit 사용률과 리셋 시각 (코럴 그라데이션 게이지)
 
 ## 설치
 

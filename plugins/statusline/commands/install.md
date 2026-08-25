@@ -27,8 +27,9 @@ description: 게이지형 status line을 설치합니다 (스크립트 복사 + 
    - jq가 없고 macOS/Linux이면: jq 설치가 필요하다고 안내한다 (`brew install jq` 또는 `sudo apt install jq`).
 
 4. **완료 안내**: 설치가 끝나면 status line은 새 세션 또는 다음 응답부터 표시된다고 안내한다. 표시 내용도 간단히 설명한다:
-   - 1줄: 모델 이름 | git 브랜치 (worktree 이름, dirty ●/clean ✓) | 현재 세션의 작업 폴더
-   - 2줄: Context — 컨텍스트 윈도우 사용률 게이지
-   - 3줄: Usage — 5시간 rate limit 사용률 게이지와 리셋 시각
+   - 1줄: 현재 세션의 작업 폴더
+   - 2줄: 모델 이름 | git 브랜치 (worktree 이름, dirty ●/clean ✓)
+   - 3줄: Context — 컨텍스트 윈도우 사용률 게이지
+   - 4줄: Usage — 5시간 rate limit 사용률 게이지와 리셋 시각
 
    덧붙여, 워크트리를 여러 개 쓴다면 `/statusline:color` 로 워크트리마다 색을 지정해 이름 앞에 색 네모(`(██ DevA)`)를 띄울 수 있다고 안내한다. 색을 지정하지 않은 워크트리는 네모 없이 표시된다.
