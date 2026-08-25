@@ -1,12 +1,11 @@
 #!/bin/bash
 # Claude Code status line
-#   1줄: 모델 | git 브랜치(worktree, dirty 상태) | 현재 시간
+#   1줄: 모델 | git 브랜치(worktree, dirty 상태) | 현재 세션의 작업 폴더
 #   2줄: Context 게이지 (컨텍스트 윈도우 사용률)
 #   3줄: Usage 게이지 (5시간 rate limit 사용률 + 리셋 시각)
 # JSON 파싱: jq 우선, 없으면 PowerShell 폴백 (Windows)
 # 워크트리별 색 네모: statusline-worktree-colors 설정 파일 참조 (/statusline:color 로 지정)
 input=$(cat)
-now=$(date +%H:%M:%S)
 
 # 필드 구분자: ASCII unit separator (경로 등 값에 섞일 수 없는 문자)
 US=$'\x1f'
@@ -270,9 +269,18 @@ make_gauge() {
     echo "$gauge"
 }
 
+# 작업 폴더 표시용 축약: $HOME 접두사를 ~ 로 치환
+cwd_display="$cwd"
+if [ -n "$HOME" ]; then
+    case "$cwd_display" in
+        "$HOME") cwd_display="~" ;;
+        "$HOME"/*) cwd_display="~${cwd_display#"$HOME"}" ;;
+    esac
+fi
+
 sep="$(printf ' \033[38;2;100;100;100m|\033[0m ')"
 
-# 첫번째 줄: [model] | [git] | [시간]
+# 첫번째 줄: [model] | [git] | [작업 폴더]
 line1_parts=()
 if [ -n "$model" ]; then
     line1_parts+=("$(printf '\033[38;2;238;212;159m%s\033[0m' "$model")")
@@ -280,7 +288,9 @@ fi
 if [ -n "$git_info" ]; then
     line1_parts+=("$git_info")
 fi
-line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$now")")
+if [ -n "$cwd_display" ]; then
+    line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display")")
+fi
 
 printf '%s' "${line1_parts[0]}"
 for ((i=1; i<${#line1_parts[@]}; i++)); do
