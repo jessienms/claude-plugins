@@ -218,8 +218,8 @@ if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-i
         git_info="$(printf '\033[38;2;138;173;244m%s\033[0m' "$branch")"
         if [ -n "$worktree_name" ]; then
             if [ -n "$wt_rgb" ]; then
-                # (█ DevA) — 네모만 지정색, 이름은 기존 mauve 유지
-                git_info="${git_info}$(printf ' \033[38;2;198;160;246m(\033[38;2;%sm\xe2\x96\x88\033[38;2;198;160;246m %s)\033[0m' "$wt_rgb" "$worktree_name")"
+                # (██ DevA) — 네모만 지정색, 이름은 기존 mauve 유지
+                git_info="${git_info}$(printf ' \033[38;2;198;160;246m(\033[38;2;%sm\xe2\x96\x88\xe2\x96\x88\033[38;2;198;160;246m %s)\033[0m' "$wt_rgb" "$worktree_name")"
             else
                 git_info="${git_info}$(printf ' \033[38;2;198;160;246m(%s)\033[0m' "$worktree_name")"
             fi
