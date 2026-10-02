@@ -163,6 +163,16 @@ resolve_rgb() {
 
 # Git 브랜치 / worktree / dirty 상태 (cwd가 git repo가 아니거나 git이 없으면 조용히 스킵)
 # cwd는 위에서 이미 "실제 현재 디렉터리"로 확정됨(캐시 미개입) → 항상 올바른 워크트리 표시.
+#
+# status line 은 렌더마다 재호출되고 이전 실행은 중간에 끊길 수 있다. 그래서:
+#   - GIT_OPTIONAL_LOCKS=0: git status 가 stat 정보 갱신용 index.lock 을 잡지 않게 한다.
+#     (안 그러면 끊긴 프로세스가 0바이트 index.lock 을 남겨 사용자의 add/commit 이 실패한다)
+#   - timeout: git 이 멈춰도 프로세스가 쌓이지 않게 상한을 둔다(timeout 있을 때만).
+export GIT_OPTIONAL_LOCKS=0
+if command -v timeout &>/dev/null; then
+    git() { timeout 2 git "$@"; }   # timeout 은 함수가 아닌 실제 git 실행파일을 띄운다
+fi
+
 git_info=""
 if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-inside-work-tree &>/dev/null; then
     branch=$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -209,7 +219,7 @@ if [ -n "$cwd" ] && command -v git &>/dev/null && git -C "$cwd" rev-parse --is-i
         fi
 
         # dirty/clean 상태
-        status_out=$(git -C "$cwd" status --porcelain 2>/dev/null)
+        status_out=$(git --no-optional-locks -C "$cwd" status --porcelain 2>/dev/null)
         if [ -n "$status_out" ]; then
             dirty_indicator="$(printf '\033[38;2;245;169;127m\xe2\x97\x8f\033[0m')"
         else
