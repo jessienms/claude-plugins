@@ -317,10 +317,10 @@ fi
 sep="$(printf ' \033[38;2;100;100;100m|\033[0m ')"
 
 # 첫번째 줄: [세션 이름] | [작업 폴더]
-# 세션 이름은 작업 폴더와 같은 색(#8BD5CA)
+# 세션 이름은 Catppuccin Macchiato Sapphire(#7DC4E4), 작업 폴더는 Teal(#8BD5CA)
 line1_parts=()
 if [ -n "$session_name" ]; then
-    line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$session_name")")
+    line1_parts+=("$(printf '\033[38;2;125;196;228m%s\033[0m' "$session_name")")
 fi
 if [ -n "$cwd_display" ]; then
     line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display")")
