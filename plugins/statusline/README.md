@@ -3,13 +3,14 @@
 Claude Code 하단에 **게이지형 status line**을 표시합니다.
 
 ```
-~/projects/claude-plugins
+claude-plugins-2a | ~/projects/claude-plugins
 Fable 5 | main ●
 Context    ████████░░░░░░░░░░░░ 42%
 Usage      ███████░░░░░░░░░░░░░ 37% (리셋 17:13)
 ```
 
-- **1줄**: 현재 세션의 작업 폴더 (홈 디렉터리는 `~`로 축약)
+- **1줄**: 세션 이름 | 현재 세션의 작업 폴더 (홈 디렉터리는 `~`로 축약)
+  - 세션 이름은 Claude Code 기본 표시 이름(예: `project_dosa-3f`)으로, `~/.claude/sessions/` 의 세션 정보에서 읽습니다. 찾지 못하면 작업 폴더만 표시합니다
 - **2줄**: 모델 이름 | git 브랜치 (linked worktree 이름, dirty ●/clean ✓ 표시)
   - 워크트리에 색을 지정하면 이름 앞에 색 네모가 붙습니다 → `main (██ DevA) ✓`
 - **3줄**: Context — 컨텍스트 윈도우 사용률 (라벤더 그라데이션 게이지)

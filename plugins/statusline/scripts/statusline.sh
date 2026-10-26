@@ -1,6 +1,6 @@
 #!/bin/bash
 # Claude Code status line
-#   1줄: 현재 세션의 작업 폴더
+#   1줄: 세션 이름 | 현재 세션의 작업 폴더
 #   2줄: 모델 | git 브랜치(worktree, dirty 상태)
 #   3줄: Context 게이지 (컨텍스트 윈도우 사용률)
 #   4줄: Usage 게이지 (5시간 rate limit 사용률 + 리셋 시각)
@@ -28,16 +28,18 @@ if command -v jq &>/dev/null; then
             (.cwd // ""),
             (if .context_window.used_percentage != null then (.context_window.used_percentage | round | tostring) else "" end),
             (if .rate_limits.five_hour != null then (.rate_limits.five_hour.used_percentage | round | tostring) else "" end),
-            (if .rate_limits.five_hour != null then (.rate_limits.five_hour.resets_at | tostring) else "" end)
+            (if .rate_limits.five_hour != null then (.rate_limits.five_hour.resets_at | tostring) else "" end),
+            (.session_id // "")
         ] | join("\u001f")
     ' 2>/dev/null)
 else
     ps_script='
         $d = $input | ConvertFrom-Json -ErrorAction SilentlyContinue
-        $model = ""; $cwd = ""; $ctx = ""; $rate = ""; $reset = ""
+        $model = ""; $cwd = ""; $ctx = ""; $rate = ""; $reset = ""; $sid = ""
         if ($d) {
             if ($d.model -and $d.model.display_name) { $model = $d.model.display_name }
             if ($d.cwd) { $cwd = $d.cwd }
+            if ($d.session_id) { $sid = $d.session_id }
             if ($d.context_window -and $null -ne $d.context_window.used_percentage) { $ctx = [math]::Round($d.context_window.used_percentage) }
             if ($d.rate_limits -and $d.rate_limits.five_hour) {
                 $rate = [math]::Round($d.rate_limits.five_hour.used_percentage)
@@ -45,7 +47,7 @@ else
             }
         }
         $us = [char]0x1f
-        "$model$us$cwd$us$ctx$us$rate$us$reset"
+        "$model$us$cwd$us$ctx$us$rate$us$reset$us$sid"
     '
     if command -v pwsh &>/dev/null; then
         parsed=$(printf '%s' "$input" | $pwsh_guard pwsh -NoProfile -NonInteractive -Command "$ps_script" 2>/dev/null)
@@ -55,7 +57,7 @@ else
 fi
 
 parsed=$(printf '%s' "$parsed" | tr -d '\r\n')
-IFS="$US" read -r model cwd used rate_used reset_epoch <<< "$parsed"
+IFS="$US" read -r model cwd used rate_used reset_epoch session_id <<< "$parsed"
 
 # git 브랜치/워크트리는 반드시 "실제 현재 디렉터리" 기준으로만 계산한다.
 # cwd는 절대 캐시에 넣지 않는다 — 넣으면 다른 세션/워크트리에서 저장한 cwd가
@@ -70,6 +72,29 @@ if [ -n "$model" ]; then
     printf '%s\037%s\037%s\037%s' "$model" "$used" "$rate_used" "$reset_epoch" > "$CACHE_FILE" 2>/dev/null
 elif [ -f "$CACHE_FILE" ]; then
     IFS="$US" read -r model used rate_used reset_epoch <<< "$(cat "$CACHE_FILE" 2>/dev/null)"
+fi
+
+# 세션 이름: Claude Code 가 세션마다 남기는 ~/.claude/sessions/<pid>.json 의 "name"
+# (기본 표시 이름, 예: project_dosa-3f). status line JSON 에는 이 값이 없어서
+# session_id 가 일치하는 파일을 찾아 읽는다. session_id 는 세션마다 달라 캐시하지 않는다.
+# 외부 프로세스 없이 bash 내장만 쓴다 — 렌더마다 호출되므로.
+session_name=""
+if [ -n "$session_id" ] && [ -d "$HOME/.claude/sessions" ]; then
+    for sf in "$HOME/.claude/sessions"/*.json; do
+        [ -f "$sf" ] || continue
+        content=$(< "$sf") 2>/dev/null || continue
+        case "$content" in
+            *"\"sessionId\":\"$session_id\""*)
+                case "$content" in
+                    *'"name":"'*)
+                        session_name="${content#*\"name\":\"}"
+                        session_name="${session_name%%\"*}"
+                        ;;
+                esac
+                break
+                ;;
+        esac
+    done
 fi
 
 # 리셋 시각: epoch → HH:mm (GNU date는 -d @, BSD/macOS date는 -r)
@@ -291,10 +316,20 @@ fi
 
 sep="$(printf ' \033[38;2;100;100;100m|\033[0m ')"
 
-# 첫번째 줄: [작업 폴더]
-if [ -n "$cwd_display" ]; then
-    printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display"
+# 첫번째 줄: [세션 이름] | [작업 폴더]
+# 세션 이름은 작업 폴더 색(#8BD5CA)과 색상/명도는 같고 채도만 높인 #6CF0DC
+line1_parts=()
+if [ -n "$session_name" ]; then
+    line1_parts+=("$(printf '\033[38;2;108;240;220m%s\033[0m' "$session_name")")
 fi
+if [ -n "$cwd_display" ]; then
+    line1_parts+=("$(printf '\033[38;2;139;213;202m%s\033[0m' "$cwd_display")")
+fi
+
+printf '%s' "${line1_parts[0]}"
+for ((i=1; i<${#line1_parts[@]}; i++)); do
+    printf '%s%s' "$sep" "${line1_parts[$i]}"
+done
 printf '\n'
 
 # 두번째 줄: [model] | [git]
