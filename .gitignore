@@ -8,3 +8,6 @@
 # OS 부산물
 Thumbs.db
 .DS_Store
+
+# mod 가 로드될 때 엔진이 만드는 타입 파일
+plugins/*/.claude-plugin/types/
